@@ -1,0 +1,9 @@
+{
+    "AUTHOR" : "daf",
+    "INSTALL_MSG" : "Call [p]snatchset to setup our sources and use alias to make single command shortcuts for convenience.",
+    "NAME" : "snatch",
+    "SHORT" : "Snatch from reddit",
+    "DESCRIPTION" : "Allows you to snatch images and videos from a subreddits and call a random one with a single command. This is alpha at best and shouldn't be used.",
+    "TAGS" : ["snatch", "nsfw", "reddit"],
+    "REQUIREMENTS" : ["scipy"]
+}
