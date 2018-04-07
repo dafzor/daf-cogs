@@ -1,0 +1,9 @@
+{
+    "AUTHOR" : "daf",
+    "INSTALL_MSG" : "Check [p]Help for commands",
+    "NAME" : "Currency",
+    "SHORT" : "Currency Converter",
+    "DESCRIPTION" : "Provides commands to convert currencies",
+    "TAGS" : ["currency", "converter", "money"],
+    "REQUIREMENTS" : []
+}
