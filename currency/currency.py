@@ -52,7 +52,9 @@ class Currency:
     @commands.command(pass_context=True)
     async def c(self, ctx, *, msg: str):
         """ Parses a line for known currency values. """
-
+        
+        # TODO: Possible optimisation using pypi regex and reset, see link bellow
+        # https://stackoverflow.com/questions/44460642/python-regex-duplicate-names-in-named-groups
         # base regex to find get the value with the currency symbols filled in
         base_regex = r'(?P<valuef>[+-]?(?:\d*(?:\.|,))?\d+)\s?(?:(?:{0}))|(?:(?:{0}))\s?(?P<valueb>[+-]?(?:\d*(?:\.|,))?\d+)'
 
@@ -64,13 +66,9 @@ class Currency:
 
             currency_regex = str.format(base_regex, affix)
             print('\nregex({})={}'.format(currency['id'], currency_regex))
-            
-            # https://stackoverflow.com/questions/44460642/python-regex-duplicate-names-in-named-groups
+
             # compiles regex and interates trough results
             rx = re.compile(currency_regex, re.IGNORECASE)
-            print('\nmsg={}\n'.format(msg))
-
-            line: str = ""
             for r in rx.finditer(msg): # cant use msg because it only sends first word
                 try:
                     print('\n\n\nmatch={}\nvalues={}'.format(r.group(0), r.expand(r"\g<valuef>\g<valueb>")))
@@ -78,32 +76,13 @@ class Currency:
                     # we also make sure to replace , with . so conversion doesn't fail
                     value = float(r.expand(r"\g<valuef>\g<valueb>").replace(',', '.'))
                     print('value={}'.format(value))
+
+                    # we have a matched currency value so we convert and add it to the reply
+                    reply += await self.convert_to_targets(currency, value)
                 except:
-                    line += "Error parsing the value \'{}\'.".format(
+                    reply += "Error parsing the value \'{}\'.\n".format(
                         r.group("value"))
                     continue
-
-                # <original value> <original currency id> =
-                line += "{:.2f} {} = ".format(value, currency['id'])
-
-                # converts the value into the target currencies
-                for tid in await self.cfg.targets():
-                    if tid == currency['id']:
-                        continue  # don't convert into itself
-
-                    # get the currency data
-                    t = await self.currency_by_id(tid)
-                    if t == None:
-                        continue
-
-                    # converts to euros, then to target
-                    converted = round(value / currency['rate'] * t['rate'], 2)
-
-                    # <converted value> <target currency id>,
-                    line += "**{:.2f}** *{}*, ".format(converted, t['id'])
-            
-            if line != "":
-                reply += line[:-2] + "\n"
 
         # don't bother sending empty message (no currency found)
         if reply == "":
@@ -117,3 +96,28 @@ class Currency:
             if c['id'] == id:
                 return c
         return None
+
+    async def convert_to_targets(self, currency: dict, value: float) -> str:
+        # <original value> <original currency id> =
+        line: str = "{:.2f} {} = ".format(value, currency['id'])
+
+        # converts the value into the target currencies
+        for tid in await self.cfg.targets():
+            if tid == currency['id']:
+                continue  # don't convert into itself
+
+            # get the currency data
+            t = await self.currency_by_id(tid)
+            if t == None:
+                continue
+
+            # converts to euros, then to target
+            converted = round(value / currency['rate'] * t['rate'], 2)
+
+            # <converted value> <target currency id>,
+            line += "**{:.2f}** *{}*, ".format(converted, t['id'])
+
+        if line != "":
+            line = line[:-2] + "\n" # removes last space and coma and ends the line 
+
+        return line
