@@ -1,25 +1,149 @@
 import discord
 from discord.ext import commands
+from redbot.core import checks, Config
+
+import re
+
 
 class Currency:
     """Currency converter"""
 
     def __init__(self, bot):
         self.bot = bot
-        # european bank exchange rate for dkk
-        # further documentation in: http://www.ecb.int/stats/exchange/eurofxref/html/index.en.html#dev
-        self.exchange: float = 7.4530
+        self.cfg = Config.get_conf(self, identifier=5663)
 
-    @commands.command(aliases=["c"], pass_context=True)
-    async def currency(self, ctx, text: str):
+        # exchange rate uses EUR as base, 1 EURO = rate
+        global_settings = {
+            "exchange": [
+                {
+                    "id": "EUR",
+                    "name": "Euro",
+                    "rate": 1,
+                    "symbols": ["€", "EUR"]
+                },
+                {
+                    "id": "USD",
+                    "name": "US dollar",
+                    "rate": 1.23,
+                    "symbols": ["$", "USD", "bucks"]
+                },
+                {
+                    "id": "DKK",
+                    "name": "Danish Krone",
+                    "rate": 7.46,
+                    "symbols": ["kr", ",-", "DKK"]
+                },
+                {
+                    "id": "GBP",
+                    "name": "British Pound",
+                    "rate": 0.88,
+                    "symbols": ["£", "GBP"]
+                }
+            ],
+            "base": "EUR",
+            "targets": ["EUR", "DKK"]
+        }
+        self.cfg.register_global(**global_settings)
+
+    @commands.group(pass_context=True)
+    async def currency(self, ctx):
         pass
 
     @commands.command(pass_context=True)
-    async def dkk(self, ctx, amount: float):
-        """Converts EUR to DKK"""  
-        await ctx.send("**{0:.2f}** EUR is **{1:.2f}** DKK".format(round(amount, 2), round(amount * self.exchange, 2)))
+    async def c(self, ctx, *, msg: str):
+        """ Parses a line for known currency values. """
 
-    @commands.command(pass_context=True)
-    async def eur(self, ctx, amount: float):
-        """Converts DKK to EUR"""  
-        await ctx.send("**{0:.2f}** DKK is **{1:.2f}** EUR".format(round(amount, 2), round(amount  / self.exchange, 2)))
+        # base regex to find get the value with the currency symbols filled in
+        base_regex = r'(?P<valuef>[+-]?(?:\d*(?:\.|,))?\d+)\s?(?:(?:{0}))|(?:(?:{0}))\s?(?P<valueb>[+-]?(?:\d*(?:\.|,))?\d+)'
+
+        # we go trough all the currencies we know and try to find them on the message one by one
+        reply: str = ""
+        for currency in await self.cfg.exchange():
+            # appends the currency affix to the base regex
+            affix = '|'.join([str.format("(?:{})", re.escape(s)) for s in currency['symbols']])
+
+            currency_regex = str.format(base_regex, affix)
+            print('\nregex({})={}'.format(currency['id'], currency_regex))
+            
+            # https://stackoverflow.com/questions/44460642/python-regex-duplicate-names-in-named-groups
+            # compiles regex and interates trough results
+            rx = re.compile(currency_regex, re.IGNORECASE)
+            print('\nmsg={}\n'.format(msg))
+
+            line: str = ""
+            for r in rx.finditer(msg): # cant use msg because it only sends first word
+                try:
+                    print('\n\n\nmatch={}\nvalues={}'.format(r.group(0), r.expand(r"\g<valuef>\g<valueb>")))
+                    # there should ever only be one match so putting both groups shouldn't matter
+                    # we also make sure to replace , with . so conversion doesn't fail
+                    value = float(r.expand(r"\g<valuef>\g<valueb>").replace(',', '.'))
+                    print('value={}'.format(value))
+                except:
+                    line += "Error parsing the value \'{}\'.".format(
+                        r.group("value"))
+                    continue
+
+                # <original value> <original currency id> =
+                line += "{:.2f} {} = ".format(value, currency['id'])
+
+                # converts the value into the target currencies
+                for tid in await self.cfg.targets():
+                    if tid == currency['id']:
+                        continue  # don't convert into itself
+
+                    # get the currency data
+                    t = await self.currency_by_id(tid)
+                    if t == None:
+                        continue
+
+                    # converts to euros, then to target
+                    converted = round(value / currency['rate'] * t['rate'], 2)
+
+                    # <converted value> <target currency id>,
+                    line += "**{:.2f}** *{}*, ".format(converted, t['id'])
+            
+            if line != "":
+                reply += line[:-2] + "\n"
+
+        # don't bother sending empty message (no currency found)
+        if reply == "":
+            return
+
+        # outputs the converted values minus the last character
+        await ctx.send(reply)
+
+    async def currency_by_id(self, id: str) -> dict:
+        for c in await self.cfg.exchange():
+            if c['id'] == id:
+                return c
+        return None
+
+    # @commands.command(pass_context=True)
+    # async def cc(self, ctx, msg: str):
+    #     # regex the line for currency
+    #     result = re.search(".")
+
+    #     reply: str = ""
+    #     for r in result:
+    #         try:
+    #             value = float(r.group("value"))
+    #         except:
+    #             reply += "Error parsing the value \'{}\'.".format(r.group("value"))
+    #             continue
+
+    #         value_currency = self.currency_by_symbol(r.group("sy"))
+
+    #         # <value> <currency id> =
+    #         reply += "**{}** {} = ".format(r.group(1), r.group(0))
+
+    #         # converts the value into the target currencies
+    #         for t in await self.targets:
+    #             if t.id == value_currency.id:
+    #                 continue # don't convert into itself
+
+    #             # converts to euros, then to target
+    #             converted = value / value_currency.rate * t.rate
+    #             reply += "**{}**{}, ".format(converted, t.id)
+
+    #     # outputs the converted values minus the last character
+    #     await ctx.send(reply[:-1])
