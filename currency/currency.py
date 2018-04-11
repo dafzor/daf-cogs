@@ -117,33 +117,3 @@ class Currency:
             if c['id'] == id:
                 return c
         return None
-
-    # @commands.command(pass_context=True)
-    # async def cc(self, ctx, msg: str):
-    #     # regex the line for currency
-    #     result = re.search(".")
-
-    #     reply: str = ""
-    #     for r in result:
-    #         try:
-    #             value = float(r.group("value"))
-    #         except:
-    #             reply += "Error parsing the value \'{}\'.".format(r.group("value"))
-    #             continue
-
-    #         value_currency = self.currency_by_symbol(r.group("sy"))
-
-    #         # <value> <currency id> =
-    #         reply += "**{}** {} = ".format(r.group(1), r.group(0))
-
-    #         # converts the value into the target currencies
-    #         for t in await self.targets:
-    #             if t.id == value_currency.id:
-    #                 continue # don't convert into itself
-
-    #             # converts to euros, then to target
-    #             converted = value / value_currency.rate * t.rate
-    #             reply += "**{}**{}, ".format(converted, t.id)
-
-    #     # outputs the converted values minus the last character
-    #     await ctx.send(reply[:-1])
