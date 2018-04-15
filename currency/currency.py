@@ -2,13 +2,16 @@ import discord
 from discord.ext import commands
 from redbot.core import checks, Config
 
+# needed to improve autocomplete
+from redbot.core.bot import Red
+
 import re
 
 
 class Currency:
     """Currency converter"""
 
-    def __init__(self, bot):
+    def __init__(self, bot: Red):
         self.bot = bot
         self.cfg = Config.get_conf(self, identifier=5663)
 
@@ -50,7 +53,11 @@ class Currency:
         pass
 
     @commands.command(pass_context=True)
-    async def c(self, ctx, *, msg: str):
+    async def c(self, ctx: commands.Context, *, msg: str):
+        await self.parse_message(ctx, msg)
+
+
+    async def parse_message(self, ctx, msg: str):
         """ Parses a line for known currency values. """
         
         # TODO: Possible optimisation using pypi regex and reset, see link bellow
@@ -79,7 +86,7 @@ class Currency:
 
                     # we have a matched currency value so we convert and add it to the reply
                     reply += await self.convert_to_targets(currency, value)
-                except:
+                except ValueError:
                     reply += "Error parsing the value \'{}\'.\n".format(
                         r.group("value"))
                     continue
@@ -95,7 +102,7 @@ class Currency:
         for c in await self.cfg.exchange():
             if c['id'] == id:
                 return c
-        return None
+        return dict()
 
     async def convert_to_targets(self, currency: dict, value: float) -> str:
         # <original value> <original currency id> =
@@ -108,8 +115,8 @@ class Currency:
 
             # get the currency data
             t = await self.currency_by_id(tid)
-            if t == None:
-                continue
+            if not t:
+                continue  # returned empty
 
             # converts to euros, then to target
             converted = round(value / currency['rate'] * t['rate'], 2)
@@ -118,6 +125,23 @@ class Currency:
             line += "**{:.2f}** *{}*, ".format(converted, t['id'])
 
         if line != "":
-            line = line[:-2] + "\n" # removes last space and coma and ends the line 
+            line = line[:-2] + "\n"  # removes last space and coma and ends the line
 
         return line
+    
+    async def on_message(self, message):
+        # messages to ignore
+        if message.author == self.bot.user or await self.is_command(message):
+            return
+        
+        await self.parse_message(message.channel, message.content)
+    
+    async def is_command(self, message) -> bool:
+        if callable(self.bot.command_prefix):
+            prefixes = await self.bot.command_prefix(self.bot, message)
+        else:
+            prefixes = self.bot.command_prefix
+        for p in prefixes:
+            if message.content.startswith(p):
+                return True
+        return False
