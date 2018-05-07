@@ -72,17 +72,17 @@ class Currency:
             affix = '|'.join([str.format("(?:{})", re.escape(s)) for s in currency['symbols']])
 
             currency_regex = str.format(base_regex, affix)
-            print('\nregex({})={}'.format(currency['id'], currency_regex))
+            #debug:print('\nregex({})={}'.format(currency['id'], currency_regex))
 
             # compiles regex and interates trough results
             rx = re.compile(currency_regex, re.IGNORECASE)
             for r in rx.finditer(msg): # cant use msg because it only sends first word
                 try:
-                    print('\n\n\nmatch={}\nvalues={}'.format(r.group(0), r.expand(r"\g<valuef>\g<valueb>")))
+                    #debug:print('\n\n\nmatch={}\nvalues={}'.format(r.group(0), r.expand(r"\g<valuef>\g<valueb>")))
                     # there should ever only be one match so putting both groups shouldn't matter
                     # we also make sure to replace , with . so conversion doesn't fail
                     value = float(r.expand(r"\g<valuef>\g<valueb>").replace(',', '.'))
-                    print('value={}'.format(value))
+                    #debug:print('value={}'.format(value))
 
                     # we have a matched currency value so we convert and add it to the reply
                     reply += await self.convert_to_targets(currency, value)
