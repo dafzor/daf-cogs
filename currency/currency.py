@@ -63,7 +63,7 @@ class Currency:
         # TODO: Possible optimisation using pypi regex and reset, see link bellow
         # https://stackoverflow.com/questions/44460642/python-regex-duplicate-names-in-named-groups
         # base regex to find get the value with the currency symbols filled in
-        base_regex = r'\s(?P<valuef>[+-]?(?:\d*(?:\.|,))?\d+)\s?(?:(?:{0}))\s|\s(?:(?:{0}))\s?(?P<valueb>[+-]?(?:\d*(?:\.|,))?\d+)\s'
+        base_regex = r'(?P<valuef>[+-]?(?:\d*(?:\.|,))?\d+)\s?(?:(?:{0}))|(?:(?:{0}))\s?(?P<valueb>[+-]?(?:\d*(?:\.|,))?\d+)'
 
         # we go trough all the currencies we know and try to find them on the message one by one
         reply: str = ""
