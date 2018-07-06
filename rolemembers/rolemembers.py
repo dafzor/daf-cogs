@@ -1,21 +1,21 @@
 import discord
 from discord.ext import commands
 
+from discord.ext.commands import Context
 
 class RoleMembers:
-    """Rolls a dice expression"""
-
     def __init__(self, bot):
         self.bot = bot
 
 
-    @commands.command(pass_context=True, aliases=["m"])
-    async def rolemembers(self, ctx, role_name: str):
-        """Shows members of given role."""
+    @commands.command(pass_context=True, aliases=["members"])
+    async def rolemembers(self, ctx: Context, role_name: str):
+        """Shows all the members with the given role."""
 
         # if role isn't found this is the default message
         message = "Unknown role '{}'".format(role_name)
 
+        # ignore case
         role_name = role_name.lower()
 
         # tries to find the role in the guild role list
