@@ -9,9 +9,16 @@ import random
 import re
 import scipy.stats
 
+# research
+# https://stackoverflow.com/questions/10543940/check-if-a-url-to-an-image-is-up-and-exists-in-python
+# https://stackoverflow.com/questions/7961363/removing-duplicates-in-lists
+# https://github.com/IeuanG/mxtm/blob/master/main.py
+
 class Snatch:
     def __init__(self, bot):
         self.bot = bot
+        # idea to use config custom to make life easier
+        # https://github.com/tekulvw/Squid-Plugins/blob/rewrite_cogs/logger/logger.py
         self.conf = Config.get_conf(self, identifier=208092)
 
         # template for sources
@@ -133,3 +140,8 @@ class Snatch:
         return (meta.score / scipy.stats.trim_mean(all.qualities) - (meta.views / all.views))
         """
         pass
+
+    # config commands to add
+    # .snatchset add|del|list
+    # add <name> <subreddit> <nsfw> <freq> <keep>
+    # del <name>
