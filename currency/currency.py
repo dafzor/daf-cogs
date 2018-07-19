@@ -4,9 +4,13 @@ from redbot.core import checks, Config
 
 # needed to improve autocomplete
 from redbot.core.bot import Red
+from discord.ext.commands import Context
 
 import re
 
+# Future ideas
+# european bank api returning xml with how much 1€ is in each currency, can use to update dkk
+# further documentation in: http://www.ecb.int/stats/exchange/eurofxref/html/index.en.html#dev
 
 class Currency:
     """Currency converter"""
@@ -46,24 +50,34 @@ class Currency:
             "base": "EUR",
             "targets": ["EUR", "DKK"]
         }
+        
+        guild_settings = {
+            "auto": True
+        }
+
         self.cfg.register_global(**global_settings)
+        self.cfg.register_guild(**guild_settings)
 
     @commands.group(pass_context=True)
     async def currency(self, ctx):
         pass
 
+    @currency.command(pass_context=True)
+    async def auto(self, flag: bool):
+        pass
+
     @commands.command(pass_context=True)
-    async def c(self, ctx: commands.Context, *, msg: str):
+    async def c(self, ctx: Context, *, msg: str):
         await self.parse_message(ctx, msg)
 
 
-    async def parse_message(self, ctx, msg: str):
+    async def parse_message(self, ctx: Context, msg: str):
         """ Parses a line for known currency values. """
         
         # TODO: Possible optimisation using pypi regex and reset, see link bellow
         # https://stackoverflow.com/questions/44460642/python-regex-duplicate-names-in-named-groups
         # base regex to find get the value with the currency symbols filled in
-        base_regex = r'(?P<valuef>[+-]?(?:\d*(?:\.|,))?\d+)\s?(?:(?:{0}))|(?:(?:{0}))\s?(?P<valueb>[+-]?(?:\d*(?:\.|,))?\d+)'
+        base_regex = r'(^|\s)(?P<valuef>[+-]?(?:\d*(?:\.|,))?\d+)\s?(?:(?:{0}))(\s|$)|(^|\s)(?:(?:{0}))\s?(?P<valueb>[+-]?(?:\d*(?:\.|,))?\d+)(\s|$)'
 
         # we go trough all the currencies we know and try to find them on the message one by one
         reply: str = ""
