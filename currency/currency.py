@@ -12,7 +12,7 @@ import re
 # european bank api returning xml with how much 1€ is in each currency, can use to update dkk
 # further documentation in: http://www.ecb.int/stats/exchange/eurofxref/html/index.en.html#dev
 
-class Currency:
+class Currency(commands.Cog):
     """Currency converter"""
 
     def __init__(self, bot: Red):

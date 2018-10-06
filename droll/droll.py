@@ -6,7 +6,7 @@ import xdice
 from redbot.core.bot import Red
 from discord.ext.commands import Context
 
-class DRoll:
+class DRoll(commands.Cog):
     """Evaluates a dice expression"""
 
     def __init__(self, bot: Red):

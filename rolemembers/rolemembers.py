@@ -3,7 +3,7 @@ from redbot.core import commands
 
 from discord.ext.commands import Context
 
-class RoleMembers:
+class RoleMembers(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
