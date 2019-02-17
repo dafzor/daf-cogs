@@ -1,0 +1,9 @@
+{
+    "AUTHOR" : "daf",
+    "INSTALL_MSG" : "",
+    "NAME" : "repeatinggroupevents",
+    "SHORT" : "repeating group events",
+    "DESCRIPTION" : "Allows setting up repeating group events to confirm attendance and show alerts.",
+    "TAGS" : ["role", "members"],
+    "REQUIREMENTS" : [""]
+}
