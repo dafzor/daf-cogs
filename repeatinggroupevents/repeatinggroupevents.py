@@ -5,8 +5,8 @@ from discord.ext.commands import Context
 
 from datetime import datetime, timedelta
 
-from eventreply import EventReply
-from eventreply import EventReplyStatus
+from .eventreply import EventReply
+from .eventreply import EventReplyStatus
 
 # # users commands
 # .rge set <label> <yes,y|no,n|tentative,t>
@@ -47,7 +47,7 @@ class RepeatingGroupEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.conf = Config.get_conf(self, identifier=7497573) # 'reg' in decimal
+        self.conf = Config.get_conf(self, identifier=7497573) # 'rge' in decimal
 
         # template for sources
         self.template_event = {
@@ -106,8 +106,6 @@ class RepeatingGroupEvents(commands.Cog):
         
         # time until event
         time_left = datetime.now - datetime.fromtimestamp(event['time'])
-        duration = timedelta(seconds=event['duration'])
-
         message += f"starting in: {time_left.day} days,  {time_left.hour} hours, {time_left.minute} minutes.\n"
     
 
@@ -140,16 +138,20 @@ class RepeatingGroupEvents(commands.Cog):
 
     @commands.command(pass_context=True)
     async def reset(self, ctx: Context, id: str):
+        # clear replies
+        # if time < current_time
+        #   add interval until time > current_time
         pass
 
     @commands.command(pass_context=True)
-    async def time(self, ctx: Context, id: str):
+    async def time(self, ctx: Context, id: str, time: str):
+        """allows changing the time of the event. format hh:mm"""
         pass
 
     async def get_event(self, id: str):
         id = id.lower()
 
-        with self.conf.events() as events:
+        with await self.conf.events() as events:
             for event in events:
                 if event['id'] == id:
                     return event

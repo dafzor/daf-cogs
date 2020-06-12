@@ -7,7 +7,7 @@ import aiohttp
 import time
 import random
 import re
-import scipy.stats
+#import scipy.stats
 
 # research
 # https://stackoverflow.com/questions/10543940/check-if-a-url-to-an-image-is-up-and-exists-in-python
@@ -128,7 +128,7 @@ class Snatch:
 
                 links = []
                 for e in reply['data']['children']:
-                    l = e['data']['url']
+                    #l = e['data']['url']
                     links.append(e['data']['url'])
 
                 return links
