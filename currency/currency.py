@@ -31,7 +31,7 @@ class Currency(commands.Cog):
                 {
                     "id": "USD",
                     "name": "US dollar",
-                    "rate": 1.23,
+                    "rate": 1.08,
                     "symbols": ["$", "USD", "bucks"]
                 },
                 {
@@ -45,6 +45,12 @@ class Currency(commands.Cog):
                     "name": "British Pound",
                     "rate": 0.88,
                     "symbols": ["£", "GBP"]
+                },
+                {
+                    "id": "WON",
+                    "name": "Korean Won",
+                    "rate": 1334.18,
+                    "symbols": ["₩", "WON"]
                 }
             ],
             "base": "EUR",
@@ -142,7 +148,8 @@ class Currency(commands.Cog):
             line = line[:-2] + "\n"  # removes last space and coma and ends the line
 
         return line
-    
+        
+    @commands.Cog.listener()
     async def on_message(self, message):
         # messages to ignore
         if message.author == self.bot.user or await self.is_command(message):
