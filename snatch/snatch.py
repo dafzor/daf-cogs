@@ -29,7 +29,7 @@ class Snatch(commands.Cog):
       "id": "",           # name to be used to identify the source
       "sub": "",          # subreddit to get the images from
       "nsfw": False,      # restrict use to nsfw channels
-      "frequency": 3600,  # time in seconds to refresh data list
+      "frequency": 86400, # time in seconds to refresh data list (default 1 days)
       "keep": 1000,       # number of records to keep in data
       "last": 0,          # unixtime of last time data was refreshed
       "data": []          # list of image links retrived with some metadata
@@ -77,27 +77,43 @@ class Snatch(commands.Cog):
 
           # is it okay to post here?
           if source['nsfw'] and not ctx.channel.is_nsfw():
+            await ctx.send("Can't use NSFW source in non NSFW channel")
             return
 
           # pick a new link at random
           link = source['data'].pop(random.randrange(len(source['data'])))
-          emb = discord.Embed(title=link)
-          emb.set_image(url=link)
-          await ctx.send(embed=emb)
+          await ctx.send(link)
+          # embed only works for images
+          #emb = discord.Embed(title=link)
+          #emb.set_image(url=link)
+          #await ctx.send(embed=emb)
           return
     
     # if we got to the end we have no data
     await ctx.send("couldn't find any")
 
-  #@checks.admin_or_permissions(manage_server=True)
-  #@commands.group(pass_context=True)
-  #async def snatchset(self, ctx):
-  #  pass
+  @commands.group(pass_context=True)
+  async def snatchcfg(self, ctx):
+    pass
 
-  #@checks.admin_or_permissions(manage_server=True)
-  #@snatchset.command(pass_context=True)
-  #async def add(self, ctx):
-  #  pass
+  @snatchcfg.command(pass_context=True, name='list')
+  async def snatchcfg_list(self, ctx):
+    """Lists all the configured sources"""
+    guild = ctx.message.guild
+
+    emb = discord.Embed(title="Snatch sources",
+      colour=discord.Colour.dark_purple(), timestamp=ctx.message.created_at)
+    emb.set_author(name=guild.name, icon_url=guild.icon_url)
+    async with self.conf.sources() as sources:
+      for s in sources:
+        emb.add_field(name=s['id'], value=f"r/{s['subreddit']}")
+    await ctx.send(embed=emb)
+
+  @checks.admin_or_permissions(manage_guild=True)
+  @snatchcfg.command(pass_context=True, name='add')
+  async def snatchcfg_add(self, ctx):
+    """Adds a new source"""
+    await ctx.send("nyi")
 
   async def go_sniffing(self):
     async with self.conf.sources() as sources:
