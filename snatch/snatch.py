@@ -1,8 +1,11 @@
 import discord
-from discord.ext import commands
+from redbot.core import commands
 from redbot.core import checks, Config
 
-import asyncio
+# needed to improve autocomplete
+from redbot.core.bot import Red
+from discord.ext.commands import Context
+
 import aiohttp
 import time
 import random
@@ -14,8 +17,8 @@ import re
 # https://stackoverflow.com/questions/7961363/removing-duplicates-in-lists
 # https://github.com/IeuanG/mxtm/blob/master/main.py
 
-class Snatch:
-  def __init__(self, bot):
+class Snatch(commands.Cog):
+  def __init__(self, bot: Red):
     self.bot = bot
     # idea to use config custom to make life easier
     # https://github.com/tekulvw/Squid-Plugins/blob/rewrite_cogs/logger/logger.py
@@ -78,21 +81,23 @@ class Snatch:
 
           # pick a new link at random
           link = source['data'].pop(random.randrange(len(source['data'])))
-          await ctx.send(link)
+          emb = discord.Embed(title=link)
+          emb.set_image(url=link)
+          await ctx.send(embed=emb)
           return
     
     # if we got to the end we have no data
     await ctx.send("couldn't find any")
 
-  @checks.admin_or_permissions(manage_server=True)
-  @commands.group(pass_context=True)
-  async def snatchset(self, ctx):
-    pass
+  #@checks.admin_or_permissions(manage_server=True)
+  #@commands.group(pass_context=True)
+  #async def snatchset(self, ctx):
+  #  pass
 
-  @checks.admin_or_permissions(manage_server=True)
-  @snatchset.command(pass_context=True)
-  async def add(self, ctx):
-    pass
+  #@checks.admin_or_permissions(manage_server=True)
+  #@snatchset.command(pass_context=True)
+  #async def add(self, ctx):
+  #  pass
 
   async def go_sniffing(self):
     async with self.conf.sources() as sources:
@@ -117,7 +122,7 @@ class Snatch:
 
   async def parse_subreddit(self, name: str, pages: int = 10) -> list:
     base_address = f"https://reddit.com/r/{name}/.json"
-    address = base_address
+    address = f"{base_address}?sort=top&t=week"
 
     request_count = 0
     async with aiohttp.ClientSession() as session:
@@ -137,7 +142,7 @@ class Snatch:
               links.append(url)
 
             last = reply['data']['children'][-1]['data']['name']
-            address = f"{base_address}?count=25&after={last}"
+            address = f"{base_address}?count=25&after={last}&sort=top&t=week"
           
           request_count += 1
 
