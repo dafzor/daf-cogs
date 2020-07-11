@@ -124,21 +124,22 @@ class Snatch:
             links = []
 
             while request_count < pages: 
-            async with session.get(address) as response:
-                reply = await response.json()
+                async with session.get(address) as response:
+                    reply = await response.json()
 
-                # regex to filter only embedable media
-                r = re.compile(r'(.*(?:(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
-                for e in reply['data']['children']:
-                url = e['data']['url']
+                    # regex to filter only embedable media
+                    r = re.compile(r'(.*(?:(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
+                    for e in reply['data']['children']:
+                    url = e['data']['url']
+                    
+                    # only appends media if embedable
+                    if r.match(url):
+                        links.append(url)
+
+                    last = reply['data']['children'][-1]['data']['name']
+                    address = f"{base_address}?count=25&after={last}"
                 
-                # only appends media if embedable
-                if r.match(url):
-                    links.append(url)
-
-                last = reply['data']['children'][-1]['data']['name']
-                address = f"{base_address}?count=25&after={last}"
-            request_count += 1
+                request_count += 1
 
             return list(set(links))
 
