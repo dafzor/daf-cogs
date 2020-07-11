@@ -98,8 +98,8 @@ class Snatch:
         async with self.conf.sources() as sources:
             for source in sources:
                 if time.time() < (source['last'] + source['frequency']):
-                    # not time to update yet
-                    continue
+                    continue # not time to update yet
+
                 print("trying to update {}".format(source['id']))
 
                 #try:
@@ -115,23 +115,32 @@ class Snatch:
                 # except Exception as e:
                 #     print("failed to update {}\n{}".format(source['id'], e))
 
-    async def parse_subreddit(self, name: str) -> list:
-        address = "https://reddit.com/r/{}/.json".format(name)
+    async def parse_subreddit(self, name: str, pages: int = 10) -> list:
+        base_address = f"https://reddit.com/r/{name}/.json"
+        address = base_address
 
-        #TODO: loop requests to get multiple pages instead of on
+        request_count = 0
         async with aiohttp.ClientSession() as session:
+            links = []
+
+            while request_count < pages: 
             async with session.get(address) as response:
                 reply = await response.json()
-                
-                # todo validate it's an embedable image or video with regex
-                #r = re.compile(r'(.*(?:(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
 
-                links = []
+                # regex to filter only embedable media
+                r = re.compile(r'(.*(?:(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
                 for e in reply['data']['children']:
-                    #l = e['data']['url']
-                    links.append(e['data']['url'])
+                url = e['data']['url']
+                
+                # only appends media if embedable
+                if r.match(url):
+                    links.append(url)
 
-                return links
+                last = reply['data']['children'][-1]['data']['name']
+                address = f"{base_address}?count=25&after={last}"
+            request_count += 1
+
+            return list(set(links))
 
     async def weigh_value(self, meta: dict) -> int:
         """
