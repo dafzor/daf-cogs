@@ -25,10 +25,11 @@ class Snatch(commands.Cog):
     self.conf = Config.get_conf(self, identifier=208092)
 
     # template for sources
+    # TODO: Remember the last few images shown to avoid repeats?
     self.template_source = {
       "id": "",           # name to be used to identify the source
       "sub": "",          # subreddit to get the images from
-      "nsfw": False,      # restrict use to nsfw channels
+      "nsfw": True,      # restrict use to nsfw channels
       "frequency": 86400, # time in seconds to refresh data list (default 1 days)
       "keep": 1000,       # number of records to keep in data
       "last": 0,          # unixtime of last time data was refreshed
@@ -111,7 +112,7 @@ class Snatch(commands.Cog):
 
   @checks.admin_or_permissions(manage_guild=True)
   @snatchcfg.command(pass_context=True, name='add')
-  async def _add(self, ctx, id:str, subreddit: str):
+  async def _add(self, ctx, id:str, subreddit: str, nsfw: bool = True):
     async with self.conf.sources() as sources:
       if id in sources:
         await ctx.send("id already in use")
@@ -120,6 +121,8 @@ class Snatch(commands.Cog):
       entry = self.template_source.copy()
       entry['id'] = id
       entry['subreddit'] = subreddit
+      entry['nsfw'] = nsfw
+      
       sources.append(entry)
 
     await ctx.send(f"added subreddit '{subreddit}' as '{id}'")
@@ -145,6 +148,7 @@ class Snatch(commands.Cog):
         # except Exception as e:
         #     print("failed to update {}\n{}".format(source['id'], e))
 
+  # TODO: instead of going trough x pages maybe make it get x number of entries?
   async def parse_subreddit(self, name: str, pages: int = 10) -> list:
     base_address = f"https://reddit.com/r/{name}/.json"
     address = f"{base_address}?sort=top&t=week"
@@ -158,6 +162,7 @@ class Snatch(commands.Cog):
           reply = await response.json()
 
           # regex to filter only embedable media
+          # TODO: review this regex to make it more dynamic and validate if i'm using all possible media
           r = re.compile(r'(.*(?:(?:i\.redd\.it)|(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
           for e in reply['data']['children']:
             url = e['data']['url']
