@@ -1,9 +1,9 @@
 {
-    "author" : "daf",
-    "install_msg" : "See documentation at https://xdice.readthedocs.io/en/latest/",
-    "name" : "droll",
-    "short" : "dice roll",
-    "description" : "Evaluates a DnD dice expression",
-    "tags" : ["dnd", "roll", "dice"],
-    "requirements" : ["xdice"]
+    "author": ["daf"],
+    "install_msg": "See documentation at https://xdice.readthedocs.io/en/latest/",
+    "name": "droll",
+    "short": "dice roll",
+    "description": "Evaluates a DnD dice expression",
+    "tags": ["dnd", "roll", "dice"],
+    "requirements": ["xdice"]
 }
