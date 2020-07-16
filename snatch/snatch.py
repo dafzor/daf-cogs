@@ -158,7 +158,7 @@ class Snatch(commands.Cog):
           reply = await response.json()
 
           # regex to filter only embedable media
-          r = re.compile(r'(.*(?:(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
+          r = re.compile(r'(.*(?:(?:i\.redd\.it)|(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
           for e in reply['data']['children']:
             url = e['data']['url']
             
