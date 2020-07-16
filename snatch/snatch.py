@@ -29,9 +29,9 @@ class Snatch(commands.Cog):
     self.template_source = {
       "id": "",           # name to be used to identify the source
       "sub": "",          # subreddit to get the images from
-      "nsfw": True,      # restrict use to nsfw channels
-      "frequency": 86400, # time in seconds to refresh data list (default 1 days)
-      "keep": 1000,       # number of records to keep in data
+      "nsfw": True,       # restrict use to nsfw channels
+      "frequency": 86400, # time in seconds to refresh data list (default 1 day)
+      "keep": 200,        # number of records to keep in data
       "last": 0,          # unixtime of last time data was refreshed
       "data": []          # list of image links retrived with some metadata
     }
@@ -64,6 +64,8 @@ class Snatch(commands.Cog):
   async def snatch_help(self, ctx):
     await ctx.send("can't find option.")
 
+
+
   @commands.command(pass_context=True)
   async def snatch(self, ctx, opt: str = ""):
     """Returns result from one of the lists."""
@@ -75,12 +77,12 @@ class Snatch(commands.Cog):
           # found it but do we have data?
           if len(source['data']) < 1:
             break
-
+          
           # is it okay to post here?
           if source['nsfw'] and not ctx.channel.is_nsfw():
             await ctx.send("Can't use NSFW source in non NSFW channel")
             return
-
+          
           # pick a new link at random
           link = source['data'].pop(random.randrange(len(source['data'])))
           await ctx.send(link)
@@ -93,12 +95,16 @@ class Snatch(commands.Cog):
     # if we got to the end we have no data
     await ctx.send("couldn't find any")
 
+
+
   @commands.group(pass_context=True)
   async def snatchcfg(self, ctx):
     pass
 
+
+
   @snatchcfg.command(pass_context=True, name='list')
-  async def _list(self, ctx):
+  async def cfg_list(self, ctx):
     """Lists all the configured sources"""
     guild = ctx.message.guild
 
@@ -110,9 +116,11 @@ class Snatch(commands.Cog):
         emb.add_field(name=s['id'], value=f"r/{s['subreddit']}")
     await ctx.send(embed=emb)
 
+
+
   @checks.admin_or_permissions(manage_guild=True)
   @snatchcfg.command(pass_context=True, name='add')
-  async def _add(self, ctx, id:str, subreddit: str, nsfw: bool = True):
+  async def cfg_add(self, ctx, id:str, subreddit: str, nsfw: bool = True):
     async with self.conf.sources() as sources:
       if id in sources:
         await ctx.send("id already in use")
@@ -124,8 +132,34 @@ class Snatch(commands.Cog):
       entry['nsfw'] = nsfw
       
       sources.append(entry)
+      self.go_sniffing()
 
     await ctx.send(f"added subreddit '{subreddit}' as '{id}'")
+
+
+  @checks.admin_or_permissions(manage_guild=True)
+  @snatchcfg.command(pass_context=True, name='delete')
+  async def cfg_delete(self, ctx, id: str):
+    async with self.conf.sources() as sources:
+      for source in sources:
+        if source['id'] == id:
+          sources.remove(source)
+          await ctx.send(f"removed {id}")
+          return
+
+      ctx.send(f"couldn't find {id}")
+
+
+
+  async def cfg_purge(self, ctx, id: str):
+    pass
+
+
+
+  async def cfg_edit(self, ctx, id: str):
+    pass
+
+
 
   async def go_sniffing(self):
     async with self.conf.sources() as sources:
