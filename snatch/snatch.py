@@ -97,7 +97,7 @@ class Snatch(commands.Cog):
     pass
 
   @snatchcfg.command(pass_context=True, name='list')
-  async def snatchcfg_list(self, ctx):
+  async def _list(self, ctx):
     """Lists all the configured sources"""
     guild = ctx.message.guild
 
@@ -111,9 +111,18 @@ class Snatch(commands.Cog):
 
   @checks.admin_or_permissions(manage_guild=True)
   @snatchcfg.command(pass_context=True, name='add')
-  async def snatchcfg_add(self, ctx):
-    """Adds a new source"""
-    await ctx.send("nyi")
+  async def _add(self, ctx, id:str, subreddit: str):
+    async with self.conf.sources() as sources:
+      if id in sources:
+        await ctx.send("id already in use")
+        return
+
+      entry = self.template_source.copy()
+      entry['id'] = id
+      entry['subreddit'] = subreddit
+      sources.append(entry)
+
+    await ctx.send(f"added subreddit '{subreddit}' as '{id}'")
 
   async def go_sniffing(self):
     async with self.conf.sources() as sources:
