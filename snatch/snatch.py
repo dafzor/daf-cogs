@@ -22,13 +22,12 @@ class Snatch(commands.Cog):
     self.bot = bot
     # idea to use config custom to make life easier
     # https://github.com/tekulvw/Squid-Plugins/blob/rewrite_cogs/logger/logger.py
-    self.conf = Config.get_conf(self, identifier=208092)
+    self.conf = Config.get_conf(self, identifier=2)
 
     # template for sources
     # TODO: Remember the last few images shown to avoid repeats?
     self.template_source = {
-      "id": "",           # name to be used to identify the source
-      "sub": "",          # subreddit to get the images from
+      "subreddit": "",    # subreddit to get the images from
       "nsfw": True,       # restrict use to nsfw channels
       "frequency": 86400, # time in seconds to refresh data list (default 1 day)
       "keep": 200,        # number of records to keep in data
@@ -48,15 +47,15 @@ class Snatch(commands.Cog):
     # copies the source template to make the default source
     default_source = self.template_source.copy()
     default_source.update({
-      'id': "aww",
-      'sub': "aww"
+      'subreddit': "aww",
+      'nsfw': False
     })
 
     # registers default config
     default_global = {
-      "sources": [
-        default_source
-      ]
+      "sources": {
+        "aww": default_source
+      }
     }
     self.conf.register_global(**default_global)
 
@@ -72,39 +71,41 @@ class Snatch(commands.Cog):
 
     # search for the right list
     async with self.conf.sources() as sources:
-      for source in sources:
-        if source['id'] == opt:
-          # found it but do we have data?
-          if len(source['data']) < 1:
-            break
-          
-          # is it okay to post here?
-          if source['nsfw'] and not ctx.channel.is_nsfw():
-            await ctx.send("Can't use NSFW source in non NSFW channel")
-            return
-          
-          # pick a new link at random
-          link = source['data'].pop(random.randrange(len(source['data'])))
-          await ctx.send(link)
-          # embed only works for images
-          #emb = discord.Embed(title=link)
-          #emb.set_image(url=link)
-          #await ctx.send(embed=emb)
-          return
+      source = sources[opt]
+
+      if not source:
+        await ctx.send(f"Unknown id '{opt} given. use [p]snatchset list to see available.")
+        return
+
+      # is it okay to post here?
+      if source['nsfw'] and not ctx.channel.is_nsfw():
+        await ctx.send(f"Snatch {opt} is marked as NSFW and this is not a NSFW channel.")
+        return
+        
+      # found it but do we have data?
+      if len(source['data']) < 1:
+        await ctx.send(f"Snatch {opt} as no more images, sorry =(")
+        return
+
+    # pick a new link at random and removes it from the list
+    link = source['data'].pop(random.randrange(len(source['data'])))
+    await ctx.send(link)
+    # embed only works for images
+    #emb = discord.Embed(title=link)
+    #emb.set_image(url=link)
+    #await ctx.send(embed=emb)
     
-    # if we got to the end we have no data
-    await ctx.send("couldn't find any")
 
 
 
   @commands.group(pass_context=True)
-  async def snatchcfg(self, ctx):
+  async def snatchset(self, ctx):
     pass
 
 
 
-  @snatchcfg.command(pass_context=True, name='list')
-  async def cfg_list(self, ctx):
+  @snatchset.command(pass_context=True, name='list')
+  async def set_list(self, ctx):
     """Lists all the configured sources"""
     guild = ctx.message.guild
 
@@ -112,105 +113,102 @@ class Snatch(commands.Cog):
       colour=discord.Colour.dark_purple(), timestamp=ctx.message.created_at)
     emb.set_author(name=guild.name, icon_url=guild.icon_url)
     async with self.conf.sources() as sources:
-      for s in sources:
-        emb.add_field(name=s['id'], value=f"r/{s['subreddit']}")
+      for k, s in sources.items():
+        emb.add_field(name=k, value=f"r/{s['subreddit']} ({len(s['data'])}), nsfw: {s['nsfw']}")
     await ctx.send(embed=emb)
 
 
 
   @checks.admin_or_permissions(manage_guild=True)
-  @snatchcfg.command(pass_context=True, name='add')
-  async def cfg_add(self, ctx, id:str, subreddit: str, nsfw: bool = True):
+  @snatchset.command(pass_context=True, name='add')
+  async def set_add(self, ctx,opt: str, subreddit: str, nsfw: bool = True):
     async with self.conf.sources() as sources:
-      if id in sources:
-        await ctx.send("id already in use")
+      if opt in sources.keys():
+        await ctx.send("A Snatch with that id already exists")
         return
 
+      # add a new one
       entry = self.template_source.copy()
-      entry['id'] = id
-      entry['subreddit'] = subreddit
-      entry['nsfw'] = nsfw
-      
-      sources.append(entry)
+      entry.update({
+        'subreddit': "aww",
+        'nsfw': nsfw
+      })
+      sources[opt] = entry
       self.go_sniffing()
 
-    await ctx.send(f"added subreddit '{subreddit}' as '{id}'")
+    await ctx.send(f"added subreddit '{subreddit}' as '{opt}'")
 
 
   @checks.admin_or_permissions(manage_guild=True)
-  @snatchcfg.command(pass_context=True, name='delete')
-  async def cfg_delete(self, ctx, id: str):
+  @snatchset.command(pass_context=True, name='delete')
+  async def set_delete(self, ctx, opt: str):
     async with self.conf.sources() as sources:
-      for source in sources:
-        if source['id'] == id:
-          sources.remove(source)
-          await ctx.send(f"removed {id}")
-          return
-
-      ctx.send(f"couldn't find {id}")
+      if sources[opt]:
+        del sources[opt]
+        ctx.send(f"Removed snatch {opt}.")
+      else:
+        ctx.send(f"Snatch with {opt} doesn't exist.")
 
 
 
-  async def cfg_purge(self, ctx, id: str):
-    pass
-
-
-
-  async def cfg_edit(self, ctx, id: str):
-    pass
-
-
-
-  async def go_sniffing(self):
+  @snatchset.command(pass_context=True, name='purge')
+  async def set_purge(self, ctx, opt: str):
     async with self.conf.sources() as sources:
-      for source in sources:
-        if time.time() < (source['last'] + source['frequency']):
+      if sources[opt]:
+        sources[opt]['data'] = []
+      
+    await ctx.send(f"Snatch data for {opt} has been purged.")
+
+
+
+  @snatchset.command(pass_context=True, name='refresh')
+  async def set_refresh(self, ctx):
+    await self.go_sniffing(True)
+
+
+
+  async def go_sniffing(self, force: bool = False):
+    async with self.conf.sources() as sources:
+      for k, source in sources.items():
+        if time.time() < (source['last'] + source['frequency']) and force == False:
+          print(f"Not time to update '{k}', skipping...")
           continue # not time to update yet
-
-        print("trying to update {}".format(source['id']))
-
-        #try:
+        print(f"updating '{k}'' data")
         # fetch new images from subreddit
         links = await self.parse_subreddit(source['subreddit'])
         # add images to data trough set to prune repeats
         source['data'] = list(set(links + source['data']))
-
-        print("updated {}, total data is now {}".format(source['id'], len(source['data'])))
-
+        print(f"updated '{k}', total data is now: {len(source['data'])}")
         # we're just updated so
         source['last'] = time.time()
-        # except Exception as e:
-        #     print("failed to update {}\n{}".format(source['id'], e))
 
   # TODO: instead of going trough x pages maybe make it get x number of entries?
-  async def parse_subreddit(self, name: str, pages: int = 10) -> list:
-    base_address = f"https://reddit.com/r/{name}/.json"
+  # TODO: make week, month options for quality
+  async def parse_subreddit(self, sub: str, pages: int = 10) -> list:
+    base_address = f"https://reddit.com/r/{sub}/.json"
     address = f"{base_address}?sort=top&t=week"
-
     request_count = 0
     async with aiohttp.ClientSession() as session:
       links = []
-
-      while request_count < pages: 
+      while request_count < pages:
         async with session.get(address) as response:
           reply = await response.json()
-
-          # regex to filter only embedable media
           # TODO: review this regex to make it more dynamic and validate if i'm using all possible media
+          # regex to filter only embedable media
           r = re.compile(r'(.*(?:(?:i\.redd\.it)|(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
           for e in reply['data']['children']:
             url = e['data']['url']
             
             # only appends media if embedable
+            #print(f"{url}")
             if r.match(url):
               links.append(url)
-
+            
             last = reply['data']['children'][-1]['data']['name']
             address = f"{base_address}?count=25&after={last}&sort=top&t=week"
           
           request_count += 1
-
-        return list(set(links))
+      return list(set(links))
 
   async def weigh_value(self, meta: dict) -> int:
     """
