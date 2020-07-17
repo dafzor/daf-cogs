@@ -130,7 +130,7 @@ class Snatch(commands.Cog):
       # add a new one
       entry = self.template_source.copy()
       entry.update({
-        'subreddit': "aww",
+        'subreddit': subreddit,
         'nsfw': nsfw
       })
       sources[opt] = entry
