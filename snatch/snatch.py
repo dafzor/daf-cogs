@@ -107,21 +107,21 @@ class Snatch(commands.Cog):
             colour=discord.Colour.dark_purple()
         )
         emb.set_author(name=guild.name, icon_url=guild.icon_url)
-        async with self.conf.sources() as sources:
-            for k, s in sources.items():
-                emb.add_field(
-                    name=k,
-                    value=f"[r/{s['subreddit']}](https://reddit.com/r/{s['subreddit']}) ({len(s['data'])}), nsfw: {s['nsfw']}",
-                    inline=True
-                )
+        sources = await self.conf.sources()
+        for source, src in sources.items():
+            emb.add_field(
+                name=source,
+                value=f"[r/{src['subreddit']}](https://reddit.com/r/{src['subreddit']}) ({len(src['data'])})\nnsfw: {src['nsfw']}",
+                inline=True
+            )
         await ctx.send(embed=emb)
 
     @checks.admin_or_permissions(manage_guild=True)
     @snatchset.command(pass_context=True, name='add')
-    async def set_add(self, ctx, opt: str, subreddit: str, nsfw: bool = True):
+    async def set_add(self, ctx, source: str, subreddit: str, nsfw: bool = True):
         """Adds a new source"""
         async with self.conf.sources() as sources:
-            if opt in sources.keys():
+            if source in sources.keys():
                 await ctx.send("A source with that id already exists")
                 return
 
@@ -131,21 +131,20 @@ class Snatch(commands.Cog):
                 'subreddit': subreddit,
                 'nsfw': nsfw
             })
-            sources[opt] = entry
-            await self.go_sniffing()
-
-        await ctx.send(f"added subreddit '{subreddit}' as '{opt}'")
+            sources[source] = entry
+        await self.go_sniffing()
+        await ctx.send(f"added source '{source}' for subreddit '{subreddit}'")
 
     @checks.admin_or_permissions(manage_guild=True)
     @snatchset.command(pass_context=True, name='delete')
-    async def set_delete(self, ctx, opt: str):
+    async def set_delete(self, ctx, source: str):
         """Deletes the source with the given id."""
         async with self.conf.sources() as sources:
-            if sources[opt]:
-                del sources[opt]
-                ctx.send(f"Removed source with id: '{opt}'.")
+            if source in sources:
+                del sources[source]
+                await ctx.send(f"Removed source with id: '{source}'.")
             else:
-                ctx.send(f"Source with id '{opt}' doesn't exist.")
+                await ctx.send(f"Source with id '{source}' doesn't exist.")
 
     @snatchset.command(pass_context=True, name='purge')
     async def set_purge(self, ctx, source: str):
