@@ -139,8 +139,8 @@ class Snatch(commands.Cog):
 
   @checks.admin_or_permissions(manage_guild=True)
   @snatchset.command(pass_context=True, name='delete')
-  """Deletes the source with the given id."""
   async def set_delete(self, ctx, opt: str):
+    """Deletes the source with the given id."""
     async with self.conf.sources() as sources:
       if sources[opt]:
         del sources[opt]
