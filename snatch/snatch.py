@@ -22,7 +22,7 @@ class Snatch(commands.Cog):
     self.bot = bot
     # idea to use config custom to make life easier
     # https://github.com/tekulvw/Squid-Plugins/blob/rewrite_cogs/logger/logger.py
-    self.conf = Config.get_conf(self, identifier=2)
+    self.conf = Config.get_conf(self, identifier=23313)
 
     # template for sources
     # TODO: Remember the last few images shown to avoid repeats?
