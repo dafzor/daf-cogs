@@ -1,9 +1,9 @@
 {
     "AUTHOR": "daf",
-    "INSTALL_MSG": "This cog will automatically convert any currency value it finds.\nSetting commands aren't implemented.",
+    "INSTALL_MSG": "This cog will manually or automatically parse a message for currency values and show exchange rates.\nUse [p]currencyset for settings (most not implemented).",
     "NAME": "Currency",
-    "SHORT": "Currency Converter",
-    "DESCRIPTION": "Automatic chat currency conversion.",
+    "SHORT": "Message Currency Converter",
+    "DESCRIPTION": "Manually or Automatic do chat currency conversion.",
     "TAGS": ["currency", "converter", "money"],
     "REQUIREMENTS": []
 }
