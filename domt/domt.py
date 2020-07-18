@@ -8,6 +8,7 @@ import random
 
 class Domt(commands.Cog):
   def __init__(self, bot: Red):
+    # images taken from https://imgur.com/a/8wneGfK
     self.cards = [
       {
         'name': 'Rogue',
