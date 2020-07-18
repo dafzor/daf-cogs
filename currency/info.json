@@ -1,9 +1,9 @@
 {
-    "AUTHOR" : "daf",
-    "INSTALL_MSG" : "Check [p]Help for commands",
-    "NAME" : "Currency",
-    "SHORT" : "Currency Converter",
-    "DESCRIPTION" : "Provides commands to convert currencies",
-    "TAGS" : ["currency", "converter", "money"],
-    "REQUIREMENTS" : []
+    "AUTHOR": "daf",
+    "INSTALL_MSG": "This cog will automatically convert any currency value it finds.\nSetting commands aren't implemented.",
+    "NAME": "Currency",
+    "SHORT": "Currency Converter",
+    "DESCRIPTION": "Automatic chat currency conversion.",
+    "TAGS": ["currency", "converter", "money"],
+    "REQUIREMENTS": []
 }

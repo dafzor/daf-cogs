@@ -1,0 +1,8 @@
+{
+    "author": ["daf"],
+    "install_msg": "Most of these cogs where done for personal use with little or no testing.\nThey're not really intended for public consumption but if you use them please report any bugs on github: <https://github.com/dafzor/daf-cogs/issues>",
+    "name": "daf-cogs",
+    "short": "Pointless Cogs by daf.",
+    "description": "Several commands I wanted to have or requested by friends.",
+    "tags": ["currency", "domt", "droll", "rolemembers", "snatch"]
+}

@@ -1,9 +1,9 @@
 {
     "AUTHOR": "daf",
-    "INSTALL_MSG": "Call [p]snatchset to setup our sources and use alias to make single command shortcuts for convenience.",
+    "INSTALL_MSG": "Call [p]snatchset to setup our sources and use alias to make single command shortcuts for convenience.\nThis cog is early beta quality.",
     "NAME": "snatch",
     "SHORT": "Snatch from reddit",
-    "DESCRIPTION": "Allows you to snatch images and embeddable videos from a subreddits and call a random one with a single command. This is alpha at best and shouldn't be used.",
+    "DESCRIPTION": "Allows you to snatch images and embeddable videos from a subreddits and randomly show one on command",
     "TAGS": ["snatch", "nsfw", "reddit"],
     "REQUIREMENTS": [""]
 }

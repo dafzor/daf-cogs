@@ -1,9 +1,9 @@
 {
     "author": ["daf"],
-    "install_msg": "See documentation at https://xdice.readthedocs.io/en/latest/",
+    "install_msg": "The command [p]droll simply passes the input to xdice library.\nSee documentation at https://xdice.readthedocs.io/en/latest/ for supported features.",
     "name": "droll",
     "short": "dice roll",
-    "description": "Evaluates a DnD dice expression",
+    "description": "Evaluates a DnD dice or math expression.",
     "tags": ["dnd", "roll", "dice"],
     "requirements": ["xdice"]
 }

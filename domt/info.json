@@ -3,7 +3,7 @@
     "INSTALL_MSG": "Deck of many Things. [p]domt to randomly show a card.",
     "NAME": "domt",
     "SHORT": "Deck of many things",
-    "DESCRIPTION": "Deck of many Things. [p]domt to randomly show a card.",
+    "DESCRIPTION": "Show a random card from the Deck of many Things.",
     "TAGS": ["d&d", "card"],
     "REQUIREMENTS": [""]
 }
