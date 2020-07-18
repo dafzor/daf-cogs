@@ -17,9 +17,12 @@ class Currency(commands.Cog):
 
     def __init__(self, bot: Red):
         self.bot = bot
-        self.cfg = Config.get_conf(self, identifier=5663)
+        self.cfg = Config.get_conf(self, identifier=23312)
 
-        # exchange rate uses EUR as base, 1 EURO = rate
+        # exchange rate uses EUR as base, so how much you need to get 1 euro
+        # examples:
+        #   USD: 1.08 USD to have 1 EUR
+        #   GBP: 0.44 GBP to have 1 EUR
         global_settings = {
             "exchange": [
                 {
@@ -66,11 +69,18 @@ class Currency(commands.Cog):
 
     @commands.group(pass_context=True)
     async def currencyset(self, ctx):
+        """Allows to configure the settings for currency"""
         pass
 
     @currencyset.command(pass_context=True)
-    async def auto(self, on: bool):
-        pass
+    async def auto(self, ctx, on: bool = None):
+        """Toggle the automatic currency conversion of messages on and off"""
+        cur_on = await self.cfg.guild(ctx.guild).auto()
+        if on == None:
+            await ctx.send(f"Auto is currently: {cur_on}")
+        else:
+            await self.cfg.guild(ctx.guild).auto.set(on)
+            await ctx.send(f"Set auto currency convert messages to: {on}")
 
     @commands.command(pass_context=True, aliases=['c'])
     async def currency(self, ctx: Context, *, msg: str):
@@ -79,6 +89,8 @@ class Currency(commands.Cog):
 
     async def parse_message(self, ctx: Context, msg: str):
         """ Parses a line for known currency values. """
+        if not await self.cfg.guild(ctx.guild).auto():
+            return
         
         # TODO: Possible optimization using pypi regex and reset, see link bellow
         # https://stackoverflow.com/questions/44460642/python-regex-duplicate-names-in-named-groups
