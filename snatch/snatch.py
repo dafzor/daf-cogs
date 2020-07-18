@@ -67,15 +67,15 @@ class Snatch(commands.Cog):
 
   @commands.command(pass_context=True)
   async def snatch(self, ctx, opt: str = ""):
-    """Returns result from one of the lists."""
+    """Shown a random image from the given source."""
 
     # search for the right list
     async with self.conf.sources() as sources:
-      source = sources[opt]
-
-      if not source:
-        await ctx.send(f"Unknown id '{opt} given. use [p]snatchset list to see available.")
+      if opt not in sources.keys():
+        await ctx.send(f"Unknown id '{opt} given. use `[p]snatchset list` to see available.")
         return
+
+      source = sources[opt]
 
       # is it okay to post here?
       if source['nsfw'] and not ctx.channel.is_nsfw():
@@ -84,29 +84,26 @@ class Snatch(commands.Cog):
         
       # found it but do we have data?
       if len(source['data']) < 1:
-        await ctx.send(f"Snatch {opt} as no more images, sorry =(")
+        await ctx.send(f"source '{opt}' as no more images, use `[p]snatchset refresh` to get more.")
         return
 
     # pick a new link at random and removes it from the list
     link = source['data'].pop(random.randrange(len(source['data'])))
     await ctx.send(link)
-    # embed only works for images
-    #emb = discord.Embed(title=link)
-    #emb.set_image(url=link)
-    #await ctx.send(embed=emb)
-    
+
 
 
 
   @commands.group(pass_context=True)
   async def snatchset(self, ctx):
+    """Cofigures the sources for [p]snatch"""
     pass
 
 
 
   @snatchset.command(pass_context=True, name='list')
   async def set_list(self, ctx):
-    """Lists all the configured sources"""
+    """Lists all the configured sources."""
     guild = ctx.message.guild
 
     emb = discord.Embed(title="Snatch sources",
@@ -122,9 +119,10 @@ class Snatch(commands.Cog):
   @checks.admin_or_permissions(manage_guild=True)
   @snatchset.command(pass_context=True, name='add')
   async def set_add(self, ctx,opt: str, subreddit: str, nsfw: bool = True):
+    """Adds a new source"""
     async with self.conf.sources() as sources:
       if opt in sources.keys():
-        await ctx.send("A Snatch with that id already exists")
+        await ctx.send("A source with that id already exists")
         return
 
       # add a new one
@@ -134,35 +132,38 @@ class Snatch(commands.Cog):
         'nsfw': nsfw
       })
       sources[opt] = entry
-      self.go_sniffing()
+      await self.go_sniffing()
 
     await ctx.send(f"added subreddit '{subreddit}' as '{opt}'")
 
 
   @checks.admin_or_permissions(manage_guild=True)
   @snatchset.command(pass_context=True, name='delete')
+  """Deletes the source with the given id."""
   async def set_delete(self, ctx, opt: str):
     async with self.conf.sources() as sources:
       if sources[opt]:
         del sources[opt]
-        ctx.send(f"Removed snatch {opt}.")
+        ctx.send(f"Removed source with id: '{opt}'.")
       else:
-        ctx.send(f"Snatch with {opt} doesn't exist.")
+        ctx.send(f"Source with id '{opt}' doesn't exist.")
 
 
 
   @snatchset.command(pass_context=True, name='purge')
   async def set_purge(self, ctx, opt: str):
+    """Removes all images for given source"""
     async with self.conf.sources() as sources:
       if sources[opt]:
         sources[opt]['data'] = []
       
-    await ctx.send(f"Snatch data for {opt} has been purged.")
+    await ctx.send(f"Data for source '{opt}' has been purged.")
 
 
 
   @snatchset.command(pass_context=True, name='refresh')
   async def set_refresh(self, ctx):
+    """Forces snatch to refresh data for sources before scheduled"""
     await self.go_sniffing(True)
 
 
@@ -217,8 +218,3 @@ class Snatch(commands.Cog):
     return (meta.score / scipy.stats.trim_mean(all.qualities) - (meta.views / all.views))
     """
     pass
-
-    # config commands to add
-    # .snatchset add|del|list
-    # add <name> <subreddit> <nsfw> <freq> <keep>
-    # del <name>
