@@ -65,15 +65,15 @@ class Currency(commands.Cog):
         self.cfg.register_guild(**guild_settings)
 
     @commands.group(pass_context=True)
-    async def currency(self, ctx):
+    async def currencyset(self, ctx):
         pass
 
-    @currency.command(pass_context=True)
-    async def auto(self, flag: bool):
+    @currencyset.command(pass_context=True)
+    async def auto(self, on: bool):
         pass
 
-    @commands.command(pass_context=True)
-    async def c(self, ctx: Context, *, msg: str):
+    @commands.command(pass_context=True, aliases=['c'])
+    async def currency(self, ctx: Context, *, msg: str):
         await self.parse_message(ctx, msg)
 
 
