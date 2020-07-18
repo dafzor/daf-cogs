@@ -17,47 +17,42 @@ class Currency(commands.Cog):
 
     def __init__(self, bot: Red):
         self.bot = bot
-        self.cfg = Config.get_conf(self, identifier=23312)
+        self.cfg = Config.get_conf(self, identifier=23313)
 
         # exchange rate uses EUR as base, so how much you need to get 1 euro
         # examples:
         #   USD: 1.08 USD to have 1 EUR
         #   GBP: 0.44 GBP to have 1 EUR
         global_settings = {
-            "exchange": [
-                {
-                    "id": "EUR",
+            "exchange": {
+                'eur': {
                     "name": "Euro",
                     "rate": 1,
                     "symbols": ["€", "EUR"]
                 },
-                {
-                    "id": "USD",
+                'usd': {
                     "name": "US dollar",
                     "rate": 1.08,
                     "symbols": ["$", "USD", "bucks"]
                 },
-                {
-                    "id": "DKK",
+                'dkk': {
                     "name": "Danish Krone",
                     "rate": 7.46,
                     "symbols": ["kr", ",-", "DKK"]
                 },
-                {
-                    "id": "GBP",
+                'gbp': {
                     "name": "British Pound",
                     "rate": 0.88,
                     "symbols": ["£", "GBP"]
                 },
-                {
-                    "id": "WON",
+                'won': {
                     "name": "Korean Won",
                     "rate": 1334.18,
                     "symbols": ["₩", "WON"]
                 }
-            ],
-            "base": "EUR",
-            "targets": ["EUR", "DKK"]
+            },
+            "base": "eur",
+            "targets": ["eur", "dkk"]
         }
         
         guild_settings = {
@@ -72,8 +67,8 @@ class Currency(commands.Cog):
         """Allows to configure the settings for currency"""
         pass
 
-    @currencyset.command(pass_context=True)
-    async def auto(self, ctx, on: bool = None):
+    @currencyset.command(pass_context=True, name='auto')
+    async def currencyset_auto(self, ctx, on: bool = None):
         """Toggle the automatic currency conversion of messages on and off"""
         cur_on = await self.cfg.guild(ctx.guild).auto()
         if on == None:
@@ -81,6 +76,8 @@ class Currency(commands.Cog):
         else:
             await self.cfg.guild(ctx.guild).auto.set(on)
             await ctx.send(f"Set auto currency convert messages to: {on}")
+
+
 
     @commands.command(pass_context=True, aliases=['c'])
     async def currency(self, ctx: Context, *, msg: str):
@@ -99,9 +96,11 @@ class Currency(commands.Cog):
 
         # we go trough all the currencies we know and try to find them on the message one by one
         reply: str = ""
-        for currency in await self.cfg.exchange():
+
+        exchange = await self.cfg.exchange()
+        for currency, data in exchange.items():
             # appends the currency affix to the base regex
-            affix = '|'.join([str.format("(?:{})", re.escape(s)) for s in currency['symbols']])
+            affix = '|'.join([str.format("(?:{})", re.escape(s)) for s in data['symbols']])
 
             currency_regex = str.format(base_regex, affix)
             #debug:print('\nregex({})={}'.format(currency['id'], currency_regex))
@@ -130,31 +129,28 @@ class Currency(commands.Cog):
         # outputs the converted values minus the last character
         await ctx.send(reply)
 
-    async def currency_by_id(self, id: str) -> dict:
-        for c in await self.cfg.exchange():
-            if c['id'] == id:
-                return c
-        return dict()
 
-    async def convert_to_targets(self, currency: dict, value: float) -> str:
+
+    async def convert_to_targets(self, base: str, value: float) -> str:
         # <original value> <original currency id> =
-        line: str = "{:.2f} {} = ".format(value, currency['id'])
+        line: str = "{:.2f} {} = ".format(value, base.capitalize())
+
+        exchange = await self.cfg.exchange()
 
         # converts the value into the target currencies
-        for tid in await self.cfg.targets():
-            if tid == currency['id']:
+        for target in await self.cfg.targets():
+            if target == base:
                 continue  # don't convert into itself
 
             # get the currency data
-            t = await self.currency_by_id(tid)
-            if not t:
+            if target not in exchange:
                 continue  # returned empty
 
             # converts to euros, then to target
-            converted = round(value / currency['rate'] * t['rate'], 2)
+            converted = round(value / exchange[base]['rate'] * exchange[target]['rate'], 2)
 
             # <converted value> <target currency id>,
-            line += "**{:.2f}** *{}*, ".format(converted, t['id'])
+            line += "**{:.2f}** *{}*, ".format(converted, target.capitalize())
 
         if line != "":
             line = line[:-2] + "\n"  # removes last space and coma and ends the line
