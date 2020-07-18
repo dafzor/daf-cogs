@@ -87,6 +87,7 @@ class Snatch(commands.Cog):
         await ctx.send(f"source '{opt}' as no more images, use `[p]snatchset refresh` to get more.")
         return
 
+    # BUG: got a duplicated image? copy post or not removing image?
     # pick a new link at random and removes it from the list
     link = source['data'].pop(random.randrange(len(source['data'])))
     await ctx.send(link)
