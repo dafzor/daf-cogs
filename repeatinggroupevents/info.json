@@ -1,9 +1,0 @@
-{
-    "AUTHOR": "daf",
-    "INSTALL_MSG": "This cog has not yet been finished and is non functional.",
-    "NAME": "repeatinggroupevents",
-    "SHORT": "repeating group events",
-    "DESCRIPTION": "Allows setting up repeating group events to confirm attendance and show alerts.",
-    "TAGS": ["role", "members"],
-    "REQUIREMENTS": [""]
-}
