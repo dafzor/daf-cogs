@@ -67,6 +67,7 @@ class Snatch(commands.Cog):
     @commands.command(pass_context=True)
     async def snatch(self, ctx, source: str = ""):
         """Shown a random image from the given source."""
+        await ctx.trigger_typing()
 
         # search for the right list
         async with self.conf.sources() as sources:
@@ -100,6 +101,7 @@ class Snatch(commands.Cog):
     @snatchset.command(pass_context=True, name='list')
     async def set_list(self, ctx):
         """Lists all the configured sources."""
+        await ctx.trigger_typing()
         guild = ctx.message.guild
 
         emb = discord.Embed(
@@ -120,6 +122,7 @@ class Snatch(commands.Cog):
     @snatchset.command(pass_context=True, name='add')
     async def set_add(self, ctx, source: str, subreddit: str, nsfw: bool = True):
         """Adds a new source"""
+        await ctx.trigger_typing()
         async with self.conf.sources() as sources:
             if source in sources.keys():
                 await ctx.send("A source with that id already exists")
@@ -139,6 +142,7 @@ class Snatch(commands.Cog):
     @snatchset.command(pass_context=True, name='delete')
     async def set_delete(self, ctx, source: str):
         """Deletes the source with the given id."""
+        await ctx.trigger_typing()
         async with self.conf.sources() as sources:
             if source in sources:
                 del sources[source]
@@ -149,6 +153,7 @@ class Snatch(commands.Cog):
     @snatchset.command(pass_context=True, name='purge')
     async def set_purge(self, ctx, source: str):
         """Removes all images for given source"""
+        await ctx.trigger_typing()
         async with self.conf.sources() as sources:
             if sources[source]:
                 sources[source]['data'] = []
@@ -159,18 +164,23 @@ class Snatch(commands.Cog):
     @snatchset.command(pass_context=True, name='refresh')
     async def set_refresh(self, ctx, source: str = None):
         """Triggers refresh of data for sources"""
-        if source is None:
-            await self.go_sniffing()
-        else:
-            await self.sniff_source(source)
+        async with ctx.typing():
+            if source is None:
+                await self.go_sniffing()
+            else:
+                await self.sniff_source(source)
+        await ctx.send("Refreshed sources.")
+
 
     @snatchset.command(pass_context=True, name='forcerefresh')
     async def set_forcerefresh(self, ctx, source: str = None):
         """Forces  refresh data for sources before scheduled"""
-        if source is None:
-            await self.go_sniffing(True)
-        else:
-            await self.sniff_source(source, True)
+        async with ctx.typing():
+            if source is None:
+                await self.go_sniffing(True)
+            else:
+                await self.sniff_source(source, True)
+        await ctx.send("Refreshed sources.")
 
     async def go_sniffing(self, force: bool = False):
         # BUG: keep getting errors saying i'm not awaiting for conf?
