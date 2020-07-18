@@ -217,7 +217,7 @@ class Snatch(commands.Cog):
                         is_nsfw = bool(e['data']['over_18'])
 
                         # only appends media if embedable and respects the nsfw of the sub
-                        if r.match(url) and nsfw == is_nsfw:
+                        if r.match(url) and (nsfw or not is_nsfw):
                             links.append(url)
 
                         last = reply['data']['children'][-1]['data']['name']
