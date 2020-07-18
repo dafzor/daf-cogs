@@ -107,12 +107,18 @@ class Snatch(commands.Cog):
     """Lists all the configured sources."""
     guild = ctx.message.guild
 
-    emb = discord.Embed(title="Snatch sources",
-      colour=discord.Colour.dark_purple(), timestamp=ctx.message.created_at)
+    emb = discord.Embed(
+      title="Snatch sources",
+      colour=discord.Colour.dark_purple()
+    )
     emb.set_author(name=guild.name, icon_url=guild.icon_url)
     async with self.conf.sources() as sources:
       for k, s in sources.items():
-        emb.add_field(name=k, value=f"r/{s['subreddit']} ({len(s['data'])}), nsfw: {s['nsfw']}")
+        emb.add_field(
+          name=k,
+          value=f"[r/{s['subreddit']}](https://reddit.com/r/{s['subreddit']}) ({len(s['data'])}), nsfw: {s['nsfw']}",
+          inline=True
+        )
     await ctx.send(embed=emb)
 
 
