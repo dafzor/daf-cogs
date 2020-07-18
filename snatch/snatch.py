@@ -72,7 +72,7 @@ class Snatch(commands.Cog):
         # search for the right list
         async with self.conf.sources() as sources:
             if source not in sources.keys():
-                await ctx.send(f"Unknown id '{source} given. use `[p]snatchset list` to see available.")
+                await ctx.send(f"Unknown source '{source} given. use `[p]snatchset list` to see available.")
                 return
 
             src = sources[source]
@@ -125,7 +125,7 @@ class Snatch(commands.Cog):
         await ctx.trigger_typing()
         async with self.conf.sources() as sources:
             if source in sources.keys():
-                await ctx.send("A source with that id already exists")
+                await ctx.send("A source with that name already exists")
                 return
 
             # add a new one
@@ -141,14 +141,14 @@ class Snatch(commands.Cog):
     @checks.admin_or_permissions(manage_guild=True)
     @snatchset.command(pass_context=True, name='delete')
     async def set_delete(self, ctx, source: str):
-        """Deletes the source with the given id."""
+        """Deletes the source with the given name."""
         await ctx.trigger_typing()
         async with self.conf.sources() as sources:
             if source in sources:
                 del sources[source]
-                await ctx.send(f"Removed source with id: '{source}'.")
+                await ctx.send(f"Removed source '{source}'.")
             else:
-                await ctx.send(f"Source with id '{source}' doesn't exist.")
+                await ctx.send(f"Source '{source}' doesn't exist.")
 
     @snatchset.command(pass_context=True, name='purge')
     async def set_purge(self, ctx, source: str):
