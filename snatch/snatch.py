@@ -65,30 +65,31 @@ class Snatch(commands.Cog):
         await ctx.send("can't find option.")
 
     @commands.command(pass_context=True)
-    async def snatch(self, ctx, opt: str = ""):
+    async def snatch(self, ctx, source: str = ""):
         """Shown a random image from the given source."""
 
         # search for the right list
         async with self.conf.sources() as sources:
-            if opt not in sources.keys():
-                await ctx.send(f"Unknown id '{opt} given. use `[p]snatchset list` to see available.")
+            if source not in sources.keys():
+                await ctx.send(f"Unknown id '{source} given. use `[p]snatchset list` to see available.")
                 return
 
-            source = sources[opt]
+            src = sources[source]
+            data_count = len(src['data'])
 
             # is it okay to post here?
-            if source['nsfw'] and not ctx.channel.is_nsfw():
-                await ctx.send(f"Snatch {opt} is marked as NSFW and this is not a NSFW channel.")
+            if src['nsfw'] and not ctx.channel.is_nsfw():
+                await ctx.send(f"Snatch {source} is marked as NSFW and this is not a NSFW channel.")
                 return
 
             # found it but do we have data?
-            if len(source['data']) < 1:
-                await ctx.send(f"source '{opt}' as no more images, use `[p]snatchset refresh` to get more.")
+            if data_count < 1:
+                await ctx.send(f"source '{source}' as no more images, use `[p]snatchset refresh` to get more.")
                 return
 
         # BUG: got a duplicated image? copy post or not removing image?
         # pick a new link at random and removes it from the list
-        link = source['data'].pop(random.randrange(len(source['data'])))
+        link = src['data'].pop(random.randrange(data_count))
         await ctx.send(link)
 
     @commands.group(pass_context=True)
@@ -147,41 +148,62 @@ class Snatch(commands.Cog):
                 ctx.send(f"Source with id '{opt}' doesn't exist.")
 
     @snatchset.command(pass_context=True, name='purge')
-    async def set_purge(self, ctx, opt: str):
+    async def set_purge(self, ctx, source: str):
         """Removes all images for given source"""
         async with self.conf.sources() as sources:
-            if sources[opt]:
-                sources[opt]['data'] = []
+            if sources[source]:
+                sources[source]['data'] = []
+                sources[source]['last'] = 0
 
-        await ctx.send(f"Data for source '{opt}' has been purged.")
+        await ctx.send(f"Data for source '{source}' has been purged.")
 
     @snatchset.command(pass_context=True, name='refresh')
-    async def set_refresh(self, ctx):
-        """Forces snatch to refresh data for sources before scheduled"""
-        await self.go_sniffing(True)
+    async def set_refresh(self, ctx, source: str = None):
+        """Triggers refresh of data for sources"""
+        if source is None:
+            await self.go_sniffing()
+        else:
+            await self.sniff_source(source)
+
+    @snatchset.command(pass_context=True, name='forcerefresh')
+    async def set_forcerefresh(self, ctx, source: str = None):
+        """Forces  refresh data for sources before scheduled"""
+        if source is None:
+            await self.go_sniffing(True)
+        else:
+            await self.sniff_source(source, True)
 
     async def go_sniffing(self, force: bool = False):
+        # BUG: keep getting errors saying i'm not awaiting for conf?
+        sources = await self.conf.sources()
+        for source, src in sources.items():
+            await self.sniff_source(source, force)
+
+    async def sniff_source(self, source: str, force: bool = False):
         async with self.conf.sources() as sources:
-            for k, source in sources.items():
-                if time.time() < (source['last'] + source['frequency']) and force == False:
-                    print(f"Not time to update '{k}', skipping...")
-                    continue  # not time to update yet
-                print(f"updating '{k}'' data")
-                # fetch new images from subreddit
-                links = await self.parse_subreddit(source['subreddit'])
-                # add images to data trough set to prune repeats
-                source['data'] = list(set(links + source['data']))
-                print(
-                    f"updated '{k}', total data is now: {len(source['data'])}")
-                # we're just updated so
-                source['last'] = time.time()
+            src = sources[source]
+
+            if time.time() < (src['last'] + src['frequency']) and force == False:
+                print(f"Not time to update '{source}', skipping...")
+                return
+
+            # fetch new images from subreddit
+            print(f"starting to update '{source}'")
+            links = await self.parse_subreddit(src['subreddit'], src['nsfw'])
+            # add images to data trough set to prune repeats
+            src['data'] = list(set(links + src['data']))
+            print(
+                f"finished updating '{source}', total data is now: {len(src['data'])}")
+            # we're just updated so
+            src['last'] = time.time()
 
     # TODO: instead of going trough x pages maybe make it get x number of entries?
     # TODO: make week, month options for quality
-    async def parse_subreddit(self, sub: str, pages: int = 10) -> list:
+    async def parse_subreddit(self, sub: str, nsfw: bool, pages: int = 10) -> list:
         base_address = f"https://reddit.com/r/{sub}/.json"
         address = f"{base_address}?sort=top&t=week"
         request_count = 0
+        
         async with aiohttp.ClientSession() as session:
             links = []
             while request_count < pages:
@@ -193,15 +215,14 @@ class Snatch(commands.Cog):
                         r'(.*(?:(?:i\.redd\.it)|(?:imgur)|(?:gfycat)).*|.*(?:(?:jpg)|(?:png)|(?:gif)|(?:mp4)|(?:webm)))')
                     for e in reply['data']['children']:
                         url = e['data']['url']
+                        is_nsfw = bool(e['data']['over_18'])
 
-                        # only appends media if embedable
-                        # print(f"{url}")
-                        if r.match(url):
+                        # only appends media if embedable and respects the nsfw of the sub
+                        if r.match(url) and nsfw == is_nsfw:
                             links.append(url)
 
                         last = reply['data']['children'][-1]['data']['name']
                         address = f"{base_address}?count=25&after={last}&sort=top&t=week"
-
                     request_count += 1
             return list(set(links))
 
