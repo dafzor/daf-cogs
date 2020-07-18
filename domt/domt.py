@@ -120,7 +120,7 @@ class Domt(commands.Cog):
         'desc': "This black card Spells Disaster. Your soul is drawn from your body and contained in an object in a place of the DM's choice. One or more powerful beings guard the place. While your soul is trapped in this way, your body is Incapacitated. A wish spell can't restore your soul, but the spell reveals the location of the object that holds it. You draw no more cards."
       }
     ]
-    print(f"{len(self.cards)} loaded, {len(set(self.cards))} unique.")
+    print(f"{len(self.cards)} loaded.")
 
   
 
