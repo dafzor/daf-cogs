@@ -1,4 +1,5 @@
+from redbot.core.bot import Red
 from .droll import DRoll
 
-def setup(bot):
-    bot.add_cog(DRoll(bot))
+async def setup(bot: Red) -> None:
+    await bot.add_cog(DRoll(bot))

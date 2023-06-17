@@ -1,4 +1,5 @@
+from redbot.core.bot import Red
 from .domt import Domt
 
-def setup(bot):
-  bot.add_cog(Domt(bot))
+async def setup(bot: Red) -> None:
+  await bot.add_cog(Domt(bot))

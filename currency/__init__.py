@@ -1,5 +1,5 @@
+from redbot.core.bot import Red
 from .currency import Currency
 
-def setup(bot):
-    c = Currency(bot)
-    bot.add_cog(c)
+async def setup(bot: Red) -> None:
+    await bot.add_cog(Currency(bot))
