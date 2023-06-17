@@ -1,4 +1,5 @@
+from redbot.core.bot import Red
 from .rolemembers import RoleMembers
 
-def setup(bot):
-    bot.add_cog(RoleMembers(bot))
+async def setup(bot: Red) -> None:
+    await bot.add_cog(RoleMembers(bot))
