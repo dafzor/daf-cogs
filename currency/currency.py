@@ -32,22 +32,22 @@ class Currency(commands.Cog):
                 },
                 'usd': {
                     "name": "US dollar",
-                    "rate": 1.08,
+                    "rate": 1.10,
                     "symbols": ["$", "USD", "bucks"]
                 },
                 'dkk': {
                     "name": "Danish Krone",
-                    "rate": 7.46,
+                    "rate": 7.44,
                     "symbols": ["kr", ",-", "DKK"]
                 },
                 'gbp': {
                     "name": "British Pound",
-                    "rate": 0.88,
+                    "rate": 0.86,
                     "symbols": ["£", "GBP"]
                 },
                 'won': {
                     "name": "Korean Won",
-                    "rate": 1334.18,
+                    "rate": 1400.62,
                     "symbols": ["₩", "WON"]
                 }
             },
